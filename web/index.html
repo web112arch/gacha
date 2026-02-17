@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Gacha on Base</title>
+  <meta name="description" content="On-chain gacha com NFTs de raridade, reward pool e badge SBT. Pronto pra Base." />
+  <style>
+    :root{
+      --bg:#050505;
+      --panel: rgba(255,255,255,.04);
+      --panel2: rgba(255,255,255,.06);
+      --border: rgba(255,255,255,.10);
+      --muted: rgba(255,255,255,.65);
+      --muted2: rgba(255,255,255,.45);
+      --text: rgba(255,255,255,.92);
+      --brand:#ffffff;
+      --brandText:#0a0a0a;
+      --blue:#0052FF;
+      --green:#14F195;
+      --shadow: 0 16px 50px rgba(0,0,0,.55);
+      --radius: 18px;
+      --radius2: 24px;
+      --max: 1100px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: var(--sans);
+      color:var(--text);
+      background:
+        radial-gradient(1200px 600px at 20% 10%, rgba(0,82,255,.18), transparent 60%),
+        radial-gradient(900px 500px at 85% 20%, rgba(20,241,149,.10), transparent 60%),
+        radial-gradient(700px 400px at 70% 85%, rgba(255,255,255,.06), transparent 55%),
+        var(--bg);
+      overflow-x:hidden;
+    }
+    a{color:inherit;text-decoration:none}
+    .wrap{max-width:var(--max); margin:0 auto; padding:26px 18px 60px}
+    .topbar{
+      position:sticky; top:0; z-index:50;
+      backdrop-filter: blur(14px);
+      background: rgba(5,5,5,.65);
+      border-bottom: 1px solid rgba(255,255,255,.07);
+    }
+    .topbar-inner{max-width:var(--max); margin:0 auto; padding:14px 18px; display:flex; align-items:center; justify-content:space-between; gap:14px}
+    .logo{display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:-.02em}
+    .dot{
+      width:10px; height:10px; border-radius:50%;
+      background: linear-gradient(135deg, var(--blue), var(--green));
+      box-shadow: 0 0 22px rgba(0,82,255,.35);
+    }
+    .nav{display:flex; gap:14px; align-items:center}
+    .nav a{font-size:14px; color:var(--muted); padding:8px 10px; border-radius:12px}
+    .nav a:hover{background:rgba(255,255,255,.06); color:rgba(255,255,255,.9)}
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      gap:10px;
+      padding:10px 14px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      color: rgba(255,255,255,.9);
+      font-size:14px;
+      cursor:pointer;
+      transition: transform .06s ease, background .2s ease, border-color .2s ease, opacity .2s ease;
+      user-select:none;
+      white-space:nowrap;
+    }
+    .btn:hover{background: rgba(255,255,255,.07)}
+    .btn:active{transform: translateY(1px)}
+    .btn.primary{
+      background: var(--brand);
+      color: var(--brandText);
+      border-color: rgba(255,255,255,.14);
+      font-weight:700;
+    }
+    .btn.primary:hover{opacity:.92}
+    .pill{
+      font-family: var(--mono);
+      font-size: 12px;
+      color: rgba(255,255,255,.75);
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      padding: 8px 10px;
+      border-radius: 999px;
+    }
+    .hero{
+      margin-top: 26px;
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: var(--radius2);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      position:relative;
+    }
+    .hero:before{
+      content:"";
+      position:absolute; inset:-2px;
+      background: radial-gradient(900px 400px at 20% 10%, rgba(0,82,255,.26), transparent 60%),
+                  radial-gradient(700px 360px at 90% 20%, rgba(20,241,149,.14), transparent 60%);
+      opacity:.55;
+      pointer-events:none;
+    }
+    .hero-inner{
+      position:relative;
+      padding: 34px 28px;
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 22px;
+      align-items:start;
+    }
+    @media (max-width: 860px){
+      .hero-inner{grid-template-columns: 1fr}
+    }
+    h1{
+      margin:0;
+      font-size: 44px;
+      letter-spacing: -0.03em;
+      line-height: 1.03;
+    }
+    .sub{
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.55;
+      max-width: 62ch;
+    }
+    .cta{margin-top: 18px; display:flex; gap:12px; flex-wrap:wrap; align-items:center}
+    .badges{margin-top:16px; display:flex; gap:10px; flex-wrap:wrap}
+    .grid{
+      margin-top: 18px;
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 860px){ .grid{grid-template-columns:1fr} }
+    .card{
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.22);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+    .card h3{margin:0; font-size:14px}
+    .card p{margin:8px 0 0; color: var(--muted2); font-size:13px; line-height:1.5}
+    .aside{
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.22);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+    .aside h3{margin:0 0 10px; font-size:14px; color: rgba(255,255,255,.88)}
+    .kv{display:flex; justify-content:space-between; gap:12px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,.08)}
+    .kv:last-child{border-bottom:none}
+    .k{color:var(--muted2); font-size:12px}
+    .v{font-family: var(--mono); font-size:12px; color: rgba(255,255,255,.88)}
+    section{margin-top: 22px}
+    .section-title{
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      margin: 26px 0 12px;
+    }
+    .section-title h2{margin:0; font-size:18px; letter-spacing:-.02em}
+    .section-title p{margin:0; color:var(--muted2); font-size:13px}
+    .panels{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 860px){ .panels{grid-template-columns:1fr} }
+    .panel{
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+    .panel h3{margin:0; font-size:14px}
+    .panel p{margin:8px 0 0; color:var(--muted2); font-size:13px; line-height:1.5}
+    .row{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; align-items:center}
+    .input, select{
+      width:100%;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.25);
+      color: rgba(255,255,255,.92);
+      outline:none;
+      font-size: 14px;
+    }
+    .input::placeholder{color:rgba(255,255,255,.35)}
+    .two{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      margin-top: 12px;
+    }
+    @media (max-width: 560px){ .two{grid-template-columns:1fr} }
+    .note{
+      margin-top:10px;
+      font-size:12px;
+      color: rgba(255,255,255,.46);
+      line-height:1.45;
+    }
+    .footer{
+      margin-top: 34px;
+      border-top: 1px solid rgba(255,255,255,.08);
+      padding-top: 18px;
+      color: rgba(255,255,255,.45);
+      font-size: 12px;
+      display:flex;
+      justify-content:space-between;
+      gap: 12px;
+      flex-wrap:wrap;
+    }
+    .status{
+      display:inline-flex; align-items:center; gap:8px;
+      font-size:12px; color: rgba(255,255,255,.75);
+    }
+    .light{
+      width:10px; height:10px; border-radius:50%;
+      background: rgba(255,255,255,.25);
+      box-shadow: 0 0 0 2px rgba(255,255,255,.07) inset;
+    }
+    .light.on{
+      background: rgba(20,241,149,.95);
+      box-shadow: 0 0 18px rgba(20,241,149,.45);
+    }
+    .divider{height:1px; background: rgba(255,255,255,.08); margin:14px 0}
+    .mono{font-family:var(--mono)}
+    .small{font-size:12px; color: rgba(255,255,255,.55)}
+  </style>
+</head>
+
+<body>
+  <div class="topbar">
+    <div class="topbar-inner">
+      <a class="logo" href="#top" aria-label="Home">
+        <span class="dot"></span>
+        <span>Gacha <span style="color:rgba(255,255,255,.55)">on Base</span></span>
+      </a>
+
+      <div class="nav">
+        <a href="#features">Features</a>
+        <a href="#dapp">DApp</a>
+        <a href="#architecture">Arquitetura</a>
+        <button class="btn" id="btnRepo" type="button">Repo</button>
+        <button class="btn primary" id="btnOpenApp" type="button">Abrir App</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap" id="top">
+    <div class="hero">
+      <div class="hero-inner">
+        <div>
+          <div class="badges">
+            <span class="pill">Network: Base Mainnet</span>
+            <span class="pill">Solidity: 0.8.28</span>
+            <span class="pill">License: MIT</span>
+          </div>
+
+          <h1 style="margin-top:16px;">
+            On-chain gacha com <span style="color:rgba(255,255,255,.78)">raridade</span>,<br />
+            <span style="color:rgba(255,255,255,.78)">reward pool</span> e <span style="color:rgba(255,255,255,.78)">SBT</span>.
+          </h1>
+
+          <p class="sub">
+            Um scaffold pronto pra virar uma DApp real na Base. Pensado pra segurança, modularidade e evolução:
+            MainSecure → ItemNFT → RewardPool → SBT.
+          </p>
+
+          <div class="cta">
+            <a class="btn primary" href="#dapp">Ver DApp</a>
+            <a class="btn" href="#architecture">Ver arquitetura</a>
+            <span class="status"><span class="light on"></span> UI pronta pra integrar Web3</span>
+          </div>
+
+          <div class="grid" id="features">
+            <div class="card">
+              <h3>🎲 RNG verificável</h3>
+              <p>Tipos premium podem usar um provedor de random externo (ex.: Entropy) para mais confiabilidade.</p>
+            </div>
+            <div class="card">
+              <h3>💰 Reward-backed</h3>
+              <p>Venda itens (burn) e receba recompensa proporcional à raridade via RewardPool.</p>
+            </div>
+            <div class="card">
+              <h3>🏅 SBT de conquista</h3>
+              <p>Badge soulbound para marcar usuários que atingiram milestones (ex.: histórico de Unique).</p>
+            </div>
+          </div>
+        </div>
+
+        <aside class="aside">
+          <h3>Resumo rápido</h3>
+          <div class="kv">
+            <div class="k">Produto</div>
+            <div class="v">Gacha System</div>
+          </div>
+          <div class="kv">
+            <div class="k">Padrão</div>
+            <div class="v">Modular contracts</div>
+          </div>
+          <div class="kv">
+            <div class="k">Deploy target</div>
+            <div class="v">Base (8453)</div>
+          </div>
+          <div class="kv">
+            <div class="k">UI status</div>
+            <div class="v">Ready to wire</div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="small">
+            Dica: quando você integrar Web3, você vai só substituir os botões “placeholder”
+            por chamadas reais (wagmi/viem) e colocar o endereço do Main.
+          </div>
+
+          <div class="row" style="margin-top:14px;">
+            <button class="btn" id="btnCopyPitch" type="button">Copiar pitch</button>
+            <button class="btn" id="btnScrollDapp" type="button">Ir para DApp</button>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <section id="dapp">
+      <div class="section-title">
+        <div>
+          <h2>🧩 DApp (UI)</h2>
+          <p>Layout pronto — aqui você pluga as chamadas do contrato depois.</p>
+        </div>
+        <span class="pill mono" id="walletPill">Wallet: not connected</span>
+      </div>
+
+      <div class="panels">
+        <div class="panel">
+          <h3>Rodar Gacha</h3>
+          <p>Escolha um tipo e execute <span class="mono">drawItem</span>.</p>
+
+          <div class="two">
+            <div>
+              <label class="small">Tipo</label>
+              <select id="gachaType" aria-label="Gacha type">
+                <option value="0">NOOB (0)</option>
+                <option value="1">APE (1)</option>
+                <option value="2">HODLER (2)</option>
+                <option value="3">OG (3)</option>
+                <option value="4">WHALE (4) - Entropy</option>
+                <option value="5">DEGEN (5) - Entropy</option>
+              </select>
+            </div>
+            <div>
+              <label class="small">Deadline (min)</label>
+              <input id="deadlineMin" class="input" type="number" value="20" min="1" />
+            </div>
+          </div>
+
+          <div class="two">
+            <div>
+              <label class="small">Entropy fee (ETH) (opcional)</label>
+              <input id="entropyFee" class="input" type="text" placeholder="ex: 0.0001" />
+            </div>
+            <div>
+              <label class="small">PermitSig (placeholder)</label>
+              <input class="input" type="text" placeholder="0x (vazio por enquanto)" disabled />
+            </div>
+          </div>
+
+          <div class="row">
+            <button class="btn primary" type="button" id="btnDraw">Draw (placeholder)</button>
+            <button class="btn" type="button" id="btnConnect">Connect wallet (placeholder)</button>
+          </div>
+
+          <div class="note">
+            * Nesta versão, os botões são apenas UI. Quando integrar, você troca por chamadas Web3 reais.
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Mintar SBT</h3>
+          <p>Mintar o badge <span class="mono">mintSBT</span> se elegível.</p>
+
+          <div class="two">
+            <div>
+              <label class="small">Status SBT</label>
+              <input class="input" type="text" value="Minting: open (placeholder)" disabled />
+            </div>
+            <div>
+              <label class="small">Requisito</label>
+              <input class="input" type="text" value="Unique history (placeholder)" disabled />
+            </div>
+          </div>
+
+          <div class="row">
+            <button class="btn primary" type="button" id="btnMintSbt">Mint SBT (placeholder)</button>
+            <span class="status"><span class="light"></span> aguardando integração</span>
+          </div>
+
+          <div class="note">
+            * Depois você vai ler o estado em <span class="mono">sbtMintingOpened()</span> no contrato Main.
+          </div>
+        </div>
+
+        <div class="panel" style="grid-column: 1 / -1;">
+          <h3>Vender Itens</h3>
+          <p>Enviar IDs para <span class="mono">sellItemBatch</span> (limite 50).</p>
+
+          <div class="two">
+            <div>
+              <label class="small">IDs (separados por vírgula)</label>
+              <input id="sellIds" class="input" type="text" placeholder="ex: 1,2,3" />
+            </div>
+            <div>
+              <label class="small">Resumo</label>
+              <input id="sellSummary" class="input" type="text" value="0 ids (placeholder)" disabled />
+            </div>
+          </div>
+
+          <div class="row">
+            <button class="btn primary" type="button" id="btnSell">Sell (placeholder)</button>
+            <span class="small">Dica: IDs vazios serão ignorados.</span>
+          </div>
+
+          <div class="note">
+            * Depois você pode mostrar o inventário lendo eventos do ItemNFT ou indexando com subgraph.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="architecture">
+      <div class="section-title">
+        <div>
+          <h2>🏗 Arquitetura</h2>
+          <p>Modelo modular, fácil de auditar e evoluir.</p>
+        </div>
+        <span class="pill mono">MainSecure → ItemNFT → RewardPool → SBT</span>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <h3>MainSecure</h3>
+          <p>Orquestra gacha, callback RNG, sell em batch e mint do SBT.</p>
+        </div>
+        <div class="card">
+          <h3>ItemNFT</h3>
+          <p>Mint/burn de itens, raridade, score e histórico de Unique.</p>
+        </div>
+        <div class="card">
+          <h3>RewardPool</h3>
+          <p>Contém liquidez em ERC20 e controla depósitos e saques.</p>
+        </div>
+      </div>
+
+      <div class="note" style="margin-top:12px;">
+        Próximo upgrade: integrar carteira, ler estado on-chain, mostrar inventário e histórico de transações.
+      </div>
+    </section>
+
+    <div class="footer">
+      <div>© <span id="year"></span> Gacha on Base • UI scaffold</div>
+      <div class="mono">Pronto pra subir no GitHub</div>
+    </div>
+  </div>
+
+  <script>
+    // Helpers
+    const $ = (id) => document.getElementById(id);
+
+    // Buttons (edit these URLs after you publish your repo)
+    const REPO_URL = "https://github.com/SEU_USUARIO/SEU_REPO"; // <-- troque depois (ou deixe assim por enquanto)
+    $("btnRepo").onclick = () => window.open(REPO_URL, "_blank");
+    $("btnOpenApp").onclick = () => location.hash = "#dapp";
+    $("btnScrollDapp").onclick = () => location.hash = "#dapp";
+
+    // Pitch copy
+    $("btnCopyPitch").onclick = async () => {
+      const text =
+        "Gacha on Base: on-chain gacha com NFTs de raridade, reward pool e badge SBT. Modular, pensado pra segurança e pronto pra evoluir.";
+      try {
+        await navigator.clipboard.writeText(text);
+        $("btnCopyPitch").textContent = "Copiado ✅";
+        setTimeout(() => ($("btnCopyPitch").textContent = "Copiar pitch"), 1300);
+      } catch {
+        alert(text);
+      }
+    };
+
+    // UI-only placeholder interactions (no web3 yet)
+    const updateSellSummary = () => {
+      const raw = $("sellIds").value || "";
+      const ids = raw.split(",").map(s => s.trim()).filter(Boolean);
+      $("sellSummary").value = `${ids.length} ids (placeholder)`;
+    };
+    $("sellIds").addEventListener("input", updateSellSummary);
+    updateSellSummary();
+
+    $("btnConnect").onclick = () => {
+      // Placeholder
+      $("walletPill").textContent = "Wallet: connected (placeholder)";
+      $("btnConnect").textContent = "Connected ✅";
+      $("btnConnect").disabled = true;
+    };
+
+    $("btnDraw").onclick = () => {
+      const t = $("gachaType").value;
+      alert(`Draw (placeholder)\nGachaType: ${t}\nDepois você liga isso em drawItem().`);
+    };
+
+    $("btnMintSbt").onclick = () => {
+      alert("Mint SBT (placeholder)\nDepois você liga isso em mintSBT().");
+    };
+
+    $("btnSell").onclick = () => {
+      const ids = ($("sellIds").value || "").split(",").map(s => s.trim()).filter(Boolean);
+      alert(`Sell (placeholder)\nIDs: ${ids.join(", ") || "(nenhum)"}\nDepois você liga isso em sellItemBatch().`);
+    };
+
+    $("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
